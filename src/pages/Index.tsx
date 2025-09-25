@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { Dashboard } from "@/components/dashboard/Dashboard";
 import { ClientList } from "@/components/clients/ClientList";
 import { InventoryList } from "@/components/inventory/InventoryList";
+import { ServiceOrderPage } from "@/components/orderService";
+import { VehicleList } from "@/components/veicles";
+import { SettingsPage } from "@/components/configs";
+import { ReportsPage } from "@/components/dashboard/Dashboard";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -10,40 +13,25 @@ const Index = () => {
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />;
+        return <ReportsPage />;
       case "clients":
         return <ClientList />;
       case "inventory":
         return <InventoryList />;
       case "vehicles":
         return (
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-muted-foreground">Veículos</h2>
-              <p className="text-muted-foreground">Em desenvolvimento</p>
-            </div>
-          </div>
+          <VehicleList />
         );
       case "orders":
         return (
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-muted-foreground">Ordens de Serviço</h2>
-              <p className="text-muted-foreground">Em desenvolvimento</p>
-            </div>
-          </div>
+          <ServiceOrderPage />
         );
       case "settings":
         return (
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-muted-foreground">Configurações</h2>
-              <p className="text-muted-foreground">Em desenvolvimento</p>
-            </div>
-          </div>
+         <SettingsPage/>
         );
       default:
-        return <Dashboard />;
+        return <ReportsPage />;
     }
   };
 

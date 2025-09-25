@@ -6,15 +6,229 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
-  }
+
+
+export interface Database {
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: number
+          name: string
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          name: string
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: number
+          name?: string
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          category_id: number | null
+          created_at: string
+          current_stock: number
+          id: number
+          last_update: string
+          minimum_stock: number
+          name: string
+          supplier_id: number | null
+          unit_price: number
+        }
+        Insert: {
+          category_id?: number | null
+          created_at?: string
+          current_stock?: number
+          id?: number
+          last_update?: string
+          minimum_stock?: number
+          name: string
+          supplier_id?: number | null
+          unit_price?: number
+        }
+        Update: {
+          category_id?: number | null
+          created_at?: string
+          current_stock?: number
+          id?: number
+          last_update?: string
+          minimum_stock?: number
+          name?: string
+          supplier_id?: number | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_items_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      makes: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      service_orders: {
+        Row: {
+          client_id: number
+          created_at: string
+          id: number
+          items: Json | null
+          observations: string | null
+          status: string
+          total_value: number
+          vehicle_id: number
+        }
+        Insert: {
+          client_id: number
+          created_at?: string
+          id?: number
+          items?: Json | null
+          observations?: string | null
+          status?: string
+          total_value?: number
+          vehicle_id: number
+        }
+        Update: {
+          client_id?: number
+          created_at?: string
+          id?: number
+          items?: Json | null
+          observations?: string | null
+          status?: string
+          total_value?: number
+          vehicle_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      suppliers: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          client_id: number
+          created_at: string
+          id: number
+          license_plate: string
+          make: string
+          model: string
+          year: number | null
+        }
+        Insert: {
+          client_id: number
+          created_at?: string
+          id?: number
+          license_plate: string
+          make: string
+          model: string
+          year?: number | null
+        }
+        Update: {
+          client_id?: number
+          created_at?: string
+          id?: number
+          license_plate?: string
+          make?: string
+          model?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -30,6 +244,8 @@ export type Database = {
     }
   }
 }
+
+
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
