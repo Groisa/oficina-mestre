@@ -37,14 +37,14 @@ interface ReportData {
   cancelledOrdersCount: number;
   averageTicket: number;
   revenueByDay: { date: string; faturamento: number }[];
-  
+
   // Clientes
   newClientsCount: number;
   topClients: { name: string | null; total: number }[];
-  
+
   // Serviços e Peças
   topServices: { name: string; value: number }[];
-  
+
   // Estoque
   stockValueByCost: number;
   stockValueBySale: number;
@@ -55,8 +55,6 @@ interface ReportData {
 // Cores para o gráfico de pizza
 const PIE_COLORS = ['#3b82f6', '#22c55e', '#f97316', '#ef4444', '#8b5cf6'];
 
-// **CORREÇÃO 2 APLICADA AQUI**
-// O tipo do parâmetro 'clients' foi ajustado para corresponder à query do Supabase.
 function processReportData(orders: ServiceOrder[], inventory: InventoryItem[], clients: Pick<Client, 'id' | 'name' | 'created_at'>[]): ReportData {
   const completedOrders = orders.filter(o => o.status === 'Concluído');
   const pendingOrders = orders.filter(o => ['Orçamento', 'Aguardando aprovação', 'Em andamento'].includes(o.status));
@@ -65,7 +63,7 @@ function processReportData(orders: ServiceOrder[], inventory: InventoryItem[], c
   const totalRevenue = completedOrders.reduce((acc, order) => acc + (order.total_value || 0), 0);
   const potentialRevenue = pendingOrders.reduce((acc, order) => acc + (order.total_value || 0), 0);
   const completedOrdersCount = completedOrders.length;
-  
+
   const revenueByDay = completedOrders.reduce((acc, order) => {
     const day = format(new Date(order.created_at), "dd/MM");
     acc[day] = (acc[day] || 0) + (order.total_value || 0);
@@ -79,8 +77,6 @@ function processReportData(orders: ServiceOrder[], inventory: InventoryItem[], c
   }, {} as Record<string, number>);
 
   const serviceCounts = completedOrders
-    // **CORREÇÃO 1 APLICADA AQUI**
-    // Usamos 'as unknown as ServiceItem[]' para converter o tipo Json de forma segura.
     .flatMap(o => (Array.isArray(o.items) ? o.items as unknown as ServiceItem[] : []))
     .reduce((acc, item) => {
       if (item?.description) {
@@ -96,7 +92,7 @@ function processReportData(orders: ServiceOrder[], inventory: InventoryItem[], c
     pendingOrdersCount: pendingOrders.length,
     cancelledOrdersCount: cancelledOrders.length,
     averageTicket: completedOrdersCount > 0 ? totalRevenue / completedOrdersCount : 0,
-    revenueByDay: Object.entries(revenueByDay).map(([date, faturamento]) => ({ date, faturamento })).sort((a,b) => a.date.localeCompare(b.date)),
+    revenueByDay: Object.entries(revenueByDay).map(([date, faturamento]) => ({ date, faturamento })).sort((a, b) => a.date.localeCompare(b.date)),
     newClientsCount: clients.length,
     topClients: Object.entries(topClients).sort(([, a], [, b]) => b - a).slice(0, 10).map(([name, total]) => ({ name, total })),
     topServices: Object.entries(serviceCounts).sort(([, a], [, b]) => b - a).slice(0, 5).map(([name, value]) => ({ name, value })),
@@ -176,7 +172,7 @@ export function ReportsPage() {
 
       {loading ? (<p>Carregando relatórios...</p>) : !data ? (<p>Não foi possível carregar os dados.</p>) : (
         <Tabs defaultValue="overview">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-10">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="financial">Financeiro</TabsTrigger>
             <TabsTrigger value="inventory">Estoque</TabsTrigger>
@@ -185,10 +181,10 @@ export function ReportsPage() {
 
           <TabsContent value="overview" className="space-y-4 mt-4">
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Faturamento (Concluído)</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{data.totalRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div><p className="text-xs text-muted-foreground">Baseado em {data.completedOrdersCount} ordens concluídas</p></CardContent></Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Receita Potencial</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{data.potentialRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div><p className="text-xs text-muted-foreground">{data.pendingOrdersCount} ordens em aberto</p></CardContent></Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Novos Clientes</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">+{data.newClientsCount}</div><p className="text-xs text-muted-foreground">No período selecionado</p></CardContent></Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle><AlertCircle className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{data.lowStockItemsCount} itens</div><p className="text-xs text-muted-foreground">Abaixo ou no nível mínimo</p></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Faturamento (Concluído)</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{data.totalRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div><p className="text-xs text-muted-foreground">Baseado em {data.completedOrdersCount} ordens concluídas</p></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Receita Potencial</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{data.potentialRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div><p className="text-xs text-muted-foreground">{data.pendingOrdersCount} ordens em aberto</p></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Novos Clientes</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">+{data.newClientsCount}</div><p className="text-xs text-muted-foreground">No período selecionado</p></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Estoque Baixo</CardTitle><AlertCircle className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{data.lowStockItemsCount} itens</div><p className="text-xs text-muted-foreground">Abaixo ou no nível mínimo</p></CardContent></Card>
             </div>
             <Card>
               <CardHeader><CardTitle>Faturamento por Dia (Ordens Concluídas)</CardTitle></CardHeader>
@@ -207,35 +203,37 @@ export function ReportsPage() {
           </TabsContent>
 
           <TabsContent value="financial" className="space-y-4 mt-4">
-             <div className="grid gap-4 md:grid-cols-3">
-                <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ticket Médio</CardTitle><BarChart2 className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent><p className="text-2xl font-bold">{data.averageTicket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p></CardContent></Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ordens Concluídas</CardTitle><ClipboardList className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent><p className="text-2xl font-bold">{data.completedOrdersCount}</p></CardContent></Card>
-                <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ordens Canceladas</CardTitle><Ban className="h-4 w-4 text-muted-foreground"/></CardHeader><CardContent><p className="text-2xl font-bold">{data.cancelledOrdersCount}</p></CardContent></Card>
-              </div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ticket Médio</CardTitle><BarChart2 className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><p className="text-2xl font-bold">{data.averageTicket.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ordens Concluídas</CardTitle><ClipboardList className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><p className="text-2xl font-bold">{data.completedOrdersCount}</p></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ordens Canceladas</CardTitle><Ban className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><p className="text-2xl font-bold">{data.cancelledOrdersCount}</p></CardContent></Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="inventory" className="space-y-4 mt-4">
-             <div className="grid gap-4 md:grid-cols-2">
-                <Card><CardHeader><CardTitle>Valor em Estoque (Custo)</CardTitle><CardDescription>Soma de (estoque atual * preço de custo)</CardDescription></CardHeader><CardContent><p className="text-2xl font-bold">{data.stockValueByCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p></CardContent></Card>
-                <Card><CardHeader><CardTitle>Potencial de Venda</CardTitle><CardDescription>Soma de (estoque atual * preço de venda)</CardDescription></CardHeader><CardContent><p className="text-2xl font-bold">{data.stockValueBySale.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p></CardContent></Card>
-              </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card><CardHeader><CardTitle>Valor em Estoque (Custo)</CardTitle><CardDescription>Soma de (estoque atual * preço de custo)</CardDescription></CardHeader><CardContent><p className="text-2xl font-bold">{data.stockValueByCost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p></CardContent></Card>
+              <Card><CardHeader><CardTitle>Potencial de Venda</CardTitle><CardDescription>Soma de (estoque atual * preço de venda)</CardDescription></CardHeader><CardContent><p className="text-2xl font-bold">{data.stockValueBySale.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p></CardContent></Card>
+            </div>
             <Card>
               <CardHeader><CardTitle>Lista de Itens em Estoque</CardTitle></CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Estoque Atual</TableHead><TableHead>Estoque Mínimo</TableHead><TableHead className="text-right">Preço de Custo</TableHead><TableHead className="text-right">Preço de Venda</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {data.inventoryItems.map(item => (
-                      <TableRow key={item.id} className={item.current_stock <= item.minimum_stock ? 'bg-destructive/10' : ''}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{item.current_stock}</TableCell>
-                        <TableCell>{item.minimum_stock}</TableCell>
-                        <TableCell className="text-right">{item.cost_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                        <TableCell className="text-right">{item.sale_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto rounded-md border">
+                  <Table className="min-w-[700px]">
+                    <TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Estoque Atual</TableHead><TableHead>Estoque Mínimo</TableHead><TableHead className="text-right">Preço de Custo</TableHead><TableHead className="text-right">Preço de Venda</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {data.inventoryItems.map(item => (
+                        <TableRow key={item.id} className={item.current_stock <= item.minimum_stock ? 'bg-destructive/10' : ''}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{item.current_stock}</TableCell>
+                          <TableCell>{item.minimum_stock}</TableCell>
+                          <TableCell className="text-right">{item.cost_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                          <TableCell className="text-right">{item.sale_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

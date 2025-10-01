@@ -153,12 +153,12 @@ function OrderForm({ onSave, onCancel, clients, vehicles, inventoryItems, initia
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div><h1 className="text-3xl font-bold">{isEditing ? `Editar OS #${initialData?.id}` : "Novo Orçamento / Ordem de Serviço"}</h1><p className="text-muted-foreground">Preencha os detalhes abaixo.</p></div>
         <Button variant="outline" onClick={onCancel}><ArrowLeft className="mr-2 h-4 w-4" />Voltar</Button>
       </div>
       <form onSubmit={handleSubmit}>
-        <Card>f
+        <Card>
           <CardContent className="pt-6 space-y-4">
             <div className="grid md:grid-cols-3 gap-4">
               <div className="space-y-2"><Label>Cliente</Label>
@@ -183,23 +183,23 @@ function OrderForm({ onSave, onCancel, clients, vehicles, inventoryItems, initia
             <div><Label>Serviços e Peças</Label>
               <div className="space-y-3 mt-2 border p-4 rounded-md">
                 {items.map((item, index) => (
-                  <div key={index} className="flex items-end gap-2">
+                  <div key={index} className="flex flex-wrap items-end gap-2">
                     {item.type === 'Peça' ? (
-                      <div className="flex-1 space-y-2"><Label className="text-xs">Peça do Estoque</Label>
+                      <div className="flex-grow min-w-[150px] space-y-2"><Label className="text-xs">Peça do Estoque</Label>
                         <Select onValueChange={(value) => handleInventoryItemSelect(index, value)} value={item.inventory_item_id?.toString()}>
                           <SelectTrigger><SelectValue placeholder="Selecione uma peça..." /></SelectTrigger>
                           <SelectContent>{inventoryItems.map((invItem: DbInventoryItem) => <SelectItem key={invItem.id} value={invItem.id.toString()}>{`${invItem.name} (Estoque: ${invItem.current_stock})`}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
                     ) : (
-                      <div className="flex-1 space-y-2"><Label className="text-xs">Descrição do Serviço</Label><Input value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} required /></div>
+                      <div className="flex-grow min-w-[150px] space-y-2"><Label className="text-xs">Descrição do Serviço</Label><Input value={item.description} onChange={(e) => handleItemChange(index, 'description', e.target.value)} required /></div>
                     )}
-                    <div className="w-24 space-y-2"><Label className="text-xs">Qtd.</Label><Input type="number" value={item.quantity} onChange={(e) => handleItemChange(index, 'quantity', Number(e.target.value))} min={0} required /></div>
-                    <div className="w-32 space-y-2"><Label className="text-xs">Valor Unit.</Label><Input type="number" step="0.01" value={item.unitPrice} onChange={(e) => handleItemChange(index, 'unitPrice', Number(e.target.value))} min={0} required /></div>
+                    <div className="flex-grow sm:flex-grow-0 w-24 space-y-2"><Label className="text-xs">Qtd.</Label><Input type="number" value={item.quantity || ''} onChange={(e) => handleItemChange(index, 'quantity', e.target.value)} min={1} required /></div>
+                    <div className="flex-grow sm:flex-grow-0 w-32 space-y-2"><Label className="text-xs">Valor Unit.</Label><Input type="number" step="0.01" value={item.unitPrice || ''} onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)} min={0} required /></div>
                     <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveItem(index)}><X className="h-4 w-4" /></Button>
                   </div>
                 ))}
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-wrap gap-2 pt-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => handleAddItem('Serviço')}><Plus className="mr-2 h-4 w-4" /> Adicionar Serviço</Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => handleAddItem('Peça')}><PackagePlus className="mr-2 h-4 w-4" /> Adicionar Peça</Button>
                   <Button type="button" variant="secondary" size="sm" onClick={onOpenAddItemDialog}><Warehouse className="mr-2 h-4 w-4" /> Novo Item no Estoque</Button>
@@ -353,26 +353,52 @@ export function ServiceOrderPage() {
 function ServiceOrderList({ orders, onSelectOrder, onCreateNew }: any) {
   return (
     <Card>
-      <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle>Ordens de Serviço</CardTitle>
-        <Button onClick={onCreateNew}><Plus className="mr-2 h-4 w-4" />Novo Orçamento / OS</Button>
+      <CardHeader className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <CardTitle>Ordens de Serviço</CardTitle>
+          <p className="text-sm text-muted-foreground">Visualize e gerencie suas OS e orçamentos.</p>
+        </div>
+        <Button onClick={onCreateNew} className="w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" />Novo Orçamento / OS</Button>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader><TableRow><TableHead>OS</TableHead><TableHead>Cliente</TableHead><TableHead>Veículo</TableHead><TableHead>Data</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Valor</TableHead></TableRow></TableHeader>
-          <TableBody>
-            {orders.map((order: ServiceOrderWithRelations) => (
-              <TableRow key={order.id} onClick={() => onSelectOrder(order)} className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-bold">#{order.id}</TableCell>
-                <TableCell>{order.clients?.name}</TableCell>
-                <TableCell>{order.vehicles ? `${order.vehicles.make} ${order.vehicles.model}` : 'N/A'}</TableCell>
-                <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
-                <TableCell><Badge variant={order.status === 'Orçamento' ? 'secondary' : 'default'}>{order.status}</Badge></TableCell>
-                <TableCell className="text-right font-medium">{order.total_value?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        {/* Mobile View: Card List */}
+        <div className="space-y-3 md:hidden">
+          {orders.map((order: ServiceOrderWithRelations) => (
+            <div key={order.id} onClick={() => onSelectOrder(order)} className="p-4 border rounded-lg cursor-pointer hover:bg-muted/50 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-lg">#{order.id}</span>
+                <Badge variant={order.status === 'Orçamento' ? 'secondary' : 'default'}>{order.status}</Badge>
+              </div>
+              <div>
+                <p className="font-medium truncate">{order.clients?.name}</p>
+                <p className="text-sm text-muted-foreground">{order.vehicles ? `${order.vehicles.make} ${order.vehicles.model}` : 'N/A'}</p>
+              </div>
+              <div className="flex justify-between items-center text-sm pt-1">
+                <span className="text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
+                <span className="font-medium">{order.total_value?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block border rounded-lg">
+          <Table>
+            <TableHeader><TableRow><TableHead>OS</TableHead><TableHead>Cliente</TableHead><TableHead>Veículo</TableHead><TableHead>Data</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Valor</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {orders.map((order: ServiceOrderWithRelations) => (
+                <TableRow key={order.id} onClick={() => onSelectOrder(order)} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-bold">#{order.id}</TableCell>
+                  <TableCell>{order.clients?.name}</TableCell>
+                  <TableCell>{order.vehicles ? `${order.vehicles.make} ${order.vehicles.model}` : 'N/A'}</TableCell>
+                  <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell><Badge variant={order.status === 'Orçamento' ? 'secondary' : 'default'}>{order.status}</Badge></TableCell>
+                  <TableCell className="text-right font-medium">{order.total_value?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) || 'R$ 0,00'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
@@ -391,36 +417,18 @@ function ServiceOrderDetail({ order, onBack, onEdit, onUpdateStatus, onDelete }:
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between no-print">
+      <div className="flex flex-wrap items-center justify-between gap-2 no-print">
         <Button variant="outline" onClick={onBack}><ArrowLeft className="mr-2 h-4 w-4" />Voltar</Button>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           <Button variant="outline" onClick={() => onEdit(order)}><Edit className="mr-2 h-4" />Editar</Button>
           <Button variant="outline" onClick={handlePrint}><Printer className="mr-2 h-4" />Imprimir</Button>
-
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">Alterar Status <MoreHorizontal className="ml-2 h-4 w-4" /></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {ALL_STATUSES.map(status => (
-                <DropdownMenuItem
-                  key={status}
-                  disabled={order.status === status}
-                  onClick={() => onUpdateStatus(order.id, status)}
-                >
-                  {status}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
+            <DropdownMenuTrigger asChild><Button variant="outline">Alterar Status <MoreHorizontal className="ml-2 h-4 w-4" /></Button></DropdownMenuTrigger>
+            <DropdownMenuContent>{ALL_STATUSES.map(status => (<DropdownMenuItem key={status} disabled={order.status === status} onClick={() => onUpdateStatus(order.id, status)}>{status}</DropdownMenuItem>))}</DropdownMenuContent>
           </DropdownMenu>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem className="text-red-500" onClick={() => onDelete(order.id)}>
-                <Trash className="mr-2 h-4 w-4" />Excluir OS
-              </DropdownMenuItem>
-            </DropdownMenuContent>
+            <DropdownMenuContent><DropdownMenuItem className="text-red-500" onClick={() => onDelete(order.id)}><Trash className="mr-2 h-4 w-4" />Excluir OS</DropdownMenuItem></DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
@@ -428,33 +436,35 @@ function ServiceOrderDetail({ order, onBack, onEdit, onUpdateStatus, onDelete }:
       <div ref={componentRef} className="print-area">
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
               <div>
                 <CardTitle className="text-2xl">Ordem de Serviço #{order.id}</CardTitle>
                 <p className="text-muted-foreground">{new Date(order.created_at).toLocaleString()}</p>
               </div>
-              <Badge className="text-base">{order.status}</Badge>
+              <Badge className="text-base mt-1 sm:mt-0">{order.status}</Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div><h3 className="font-semibold text-lg">Cliente</h3><p>{order.clients?.name}</p><p>{order.clients?.phone}</p><p>{order.clients?.email}</p></div>
+            <div className="grid md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+              <div><h3 className="font-semibold text-lg">Cliente</h3><p>{order.clients?.name}</p><p>{order.clients?.phone}</p><p className="break-all">{order.clients?.email}</p></div>
               <div><h3 className="font-semibold text-lg">Veículo</h3><p>{order.vehicles?.make} {order.vehicles?.model}</p><p>Placa: {order.vehicles?.license_plate}</p><p>Ano: {order.vehicles?.year}</p></div>
             </div>
             <Tabs defaultValue="items">
               <TabsList className="no-print"><TabsTrigger value="items">Itens e Custos</TabsTrigger><TabsTrigger value="observations">Observações</TabsTrigger></TabsList>
               <TabsContent value="items" className="mt-4">
-                <Table>
-                  <TableHeader><TableRow><TableHead>Item</TableHead><TableHead>Qtd.</TableHead><TableHead className="text-right">Vl. Unit.</TableHead><TableHead className="text-right">Subtotal</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {(order.items as ServiceItem[])?.map((item, i) => (
-                      <TableRow key={i}><TableCell>{item.description}</TableCell><TableCell>{item.quantity}</TableCell><TableCell className="text-right">{Number(item.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell><TableCell className="text-right">{(Number(item.quantity) * Number(item.unitPrice)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell></TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto rounded-md border">
+                  <Table className="min-w-[500px]">
+                    <TableHeader><TableRow><TableHead>Item</TableHead><TableHead className="w-16">Qtd.</TableHead><TableHead className="text-right w-28">Vl. Unit.</TableHead><TableHead className="text-right w-28">Subtotal</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {(order.items as ServiceItem[])?.map((item, i) => (
+                        <TableRow key={i}><TableCell className="font-medium">{item.description}</TableCell><TableCell>{item.quantity}</TableCell><TableCell className="text-right">{Number(item.unitPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell><TableCell className="text-right">{(Number(item.quantity) * Number(item.unitPrice)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell></TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
                 <div className="flex justify-end mt-4"><div className="w-full max-w-sm space-y-2"><Separator /><div className="flex justify-between font-bold text-lg"><span>Total:</span><span>{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div></div></div>
               </TabsContent>
-              <TabsContent value="observations" className="mt-4"><p>{order.observations || "Nenhuma observação."}</p></TabsContent>
+              <TabsContent value="observations" className="mt-4"><p className="whitespace-pre-wrap break-words">{order.observations || "Nenhuma observação."}</p></TabsContent>
             </Tabs>
           </CardContent>
         </Card>

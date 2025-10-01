@@ -19,10 +19,10 @@ type ItemWithRelations = Item & { categories: Category | null; suppliers: Suppli
 function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, onAddNewCategory, onAddNewSupplier }: { onSave: Function, onCancel: Function, initialData?: Item | null, categories: Category[], suppliers: Supplier[], onAddNewCategory: Function, onAddNewSupplier: Function }) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
-    current_stock: initialData?.current_stock || 0,
-    minimum_stock: initialData?.minimum_stock || 0,
-    cost_price: initialData?.cost_price || 0,
-    sale_price: initialData?.sale_price || 0,
+    current_stock: initialData?.current_stock || null,
+    minimum_stock: initialData?.minimum_stock || null,
+    cost_price: initialData?.cost_price || null,
+    sale_price: initialData?.sale_price || null,
     category_id: initialData?.category_id || null,
     supplier_id: initialData?.supplier_id || null,
   });
@@ -34,9 +34,14 @@ function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, o
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: name === 'name' ? value : Number(value) }));
+    if (name === 'name') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      return;
+    }
+    const numValue = Number(value);
+    setFormData(prev => ({ ...prev, [name]: numValue > 0 ? numValue : null }));
   };
-  
+
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: Number(value) }));
   };
@@ -50,7 +55,7 @@ function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, o
       setIsCategoryDialogOpen(false);
     }
   };
-  
+
   const handleSaveNewSupplier = async () => {
     if (!newSupplierName.trim()) return;
     const newSupplier = await onAddNewSupplier(newSupplierName.trim());
@@ -75,7 +80,7 @@ function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, o
       <Card>
         <form onSubmit={handleSubmit}>
           <CardContent className="pt-6 space-y-4">
-            <div className="space-y-2"><Label htmlFor="name">Nome do Item</Label><Input id="name" name="name" value={formData.name} onChange={handleChange} required/></div>
+            <div className="space-y-2"><Label htmlFor="name">Nome do Item</Label><Input id="name" name="name" value={formData.name} onChange={handleChange} required /></div>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2"><Label htmlFor="category_id">Categoria</Label>
                 <div className="flex items-center gap-2">
@@ -83,7 +88,7 @@ function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, o
                     <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                     <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent>
                   </Select>
-                  <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}><DialogTrigger asChild><Button type="button" variant="outline" size="icon"><Plus className="h-4 w-4"/></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Nova Categoria</DialogTitle></DialogHeader><div className="py-4"><Input placeholder="Nome da categoria" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} /></div><DialogFooter><Button onClick={handleSaveNewCategory}>Salvar</Button></DialogFooter></DialogContent></Dialog>
+                  <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}><DialogTrigger asChild><Button type="button" variant="outline" size="icon"><Plus className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Nova Categoria</DialogTitle></DialogHeader><div className="py-4"><Input placeholder="Nome da categoria" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} /></div><DialogFooter><Button onClick={handleSaveNewCategory}>Salvar</Button></DialogFooter></DialogContent></Dialog>
                 </div>
               </div>
               <div className="space-y-2"><Label htmlFor="supplier_id">Fornecedor</Label>
@@ -92,17 +97,17 @@ function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, o
                     <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                     <SelectContent>{suppliers.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>)}</SelectContent>
                   </Select>
-                  <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}><DialogTrigger asChild><Button type="button" variant="outline" size="icon"><Plus className="h-4 w-4"/></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Novo Fornecedor</DialogTitle></DialogHeader><div className="py-4"><Input placeholder="Nome do fornecedor" value={newSupplierName} onChange={e => setNewSupplierName(e.target.value)} /></div><DialogFooter><Button onClick={handleSaveNewSupplier}>Salvar</Button></DialogFooter></DialogContent></Dialog>
+                  <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}><DialogTrigger asChild><Button type="button" variant="outline" size="icon"><Plus className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Novo Fornecedor</DialogTitle></DialogHeader><div className="py-4"><Input placeholder="Nome do fornecedor" value={newSupplierName} onChange={e => setNewSupplierName(e.target.value)} /></div><DialogFooter><Button onClick={handleSaveNewSupplier}>Salvar</Button></DialogFooter></DialogContent></Dialog>
                 </div>
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label htmlFor="cost_price">Preço de Custo (R$)</Label><Input id="cost_price" name="cost_price" type="number" step="0.01" value={formData.cost_price} onChange={handleChange} /></div>
-              <div className="space-y-2"><Label htmlFor="sale_price">Preço de Venda (R$)</Label><Input id="sale_price" name="sale_price" type="number" step="0.01" value={formData.sale_price} onChange={handleChange} /></div>
+              <div className="space-y-2"><Label htmlFor="cost_price">Preço de Custo (R$)</Label><Input id="cost_price" name="cost_price" type="number" step="0.01" value={formData.cost_price || ''} onChange={handleChange} /></div>
+              <div className="space-y-2"><Label htmlFor="sale_price">Preço de Venda (R$)</Label><Input id="sale_price" name="sale_price" type="number" step="0.01" value={formData.sale_price || ''} onChange={handleChange} /></div>
             </div>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2"><Label htmlFor="current_stock">Estoque Atual</Label><Input id="current_stock" name="current_stock" type="number" value={formData.current_stock} onChange={handleChange} /></div>
-              <div className="space-y-2"><Label htmlFor="minimum_stock">Estoque Mínimo</Label><Input id="minimum_stock" name="minimum_stock" type="number" value={formData.minimum_stock} onChange={handleChange} /></div>
+              <div className="space-y-2"><Label htmlFor="current_stock">Estoque Atual</Label><Input id="current_stock" name="current_stock" type="number" value={formData.current_stock || ''} onChange={handleChange} /></div>
+              <div className="space-y-2"><Label htmlFor="minimum_stock">Estoque Mínimo</Label><Input id="minimum_stock" name="minimum_stock" type="number" value={formData.minimum_stock || ''} onChange={handleChange} /></div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-end"><Button type="submit">{isEditing ? "Salvar Alterações" : "Adicionar Item"}</Button></CardFooter>
@@ -152,13 +157,13 @@ export function InventoryList() {
     if (error) { console.error("Erro ao adicionar categoria:", error); return null; }
     else { setCategories(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name))); return data; }
   };
-  
+
   const handleAddNewSupplier = async (name: string) => {
     const { data, error } = await supabase.from('suppliers').insert({ name }).select().single();
     if (error) { console.error("Erro ao adicionar fornecedor:", error); return null; }
     else { setSuppliers(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name))); return data; }
   };
-  
+
   const handleDelete = async (itemId: number) => {
     if (window.confirm("Tem certeza que deseja excluir este item?")) {
       const { error } = await supabase.from('inventory_items').delete().eq('id', itemId);
@@ -169,19 +174,19 @@ export function InventoryList() {
 
   const filteredInventory = inventory.filter(item => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = item.name.toLowerCase().includes(searchLower) || item.suppliers?.name.toLowerCase().includes(searchLower);
+    const matchesSearch = item.name.toLowerCase().includes(searchLower) || item.suppliers?.name?.toLowerCase().includes(searchLower);
     const matchesCategory = categoryFilter === "all" || item.category_id?.toString() === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
   const getStockStatus = (current: number, minimum: number) => {
-    if (current < minimum) return { status: "Baixo", variant: "destructive" as const };
+    if (current <= minimum) return { status: "Baixo", variant: "destructive" as const };
     if (current <= minimum * 1.2) return { status: "Atenção", variant: "outline" as const };
     return { status: "Normal", variant: "default" as const };
   };
 
   const totalValue = inventory.reduce((acc, item) => acc + (item.current_stock * item.cost_price), 0);
-  const lowStockCount = inventory.filter(item => item.current_stock < item.minimum_stock).length;
+  const lowStockCount = inventory.filter(item => item.current_stock <= item.minimum_stock).length;
 
   if (view === 'form') {
     return <InventoryForm onSave={handleSave} onCancel={() => { setView('list'); setEditingItem(null); }} initialData={editingItem} categories={categories} suppliers={suppliers} onAddNewCategory={handleAddNewCategory} onAddNewSupplier={handleAddNewSupplier} />;
@@ -189,19 +194,19 @@ export function InventoryList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div><h1 className="text-3xl font-bold">Estoque</h1><p className="text-muted-foreground">Controle de peças e materiais</p></div>
         <div className="flex space-x-2">
           <Button onClick={() => { setEditingItem(null); setView('form'); }}><Plus className="h-4 w-4 mr-2" />Novo Item</Button>
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input placeholder="Buscar por nome ou fornecedor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10"/>
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <div className="relative flex-1 w-full sm:max-w-md">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input placeholder="Buscar por nome ou fornecedor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-48"><SelectValue placeholder="Categoria" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Categoria" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as Categorias</SelectItem>
             {categories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
@@ -222,7 +227,7 @@ export function InventoryList() {
             {loading ? <p>Carregando...</p> : filteredInventory.map((item) => {
               const stockStatus = getStockStatus(item.current_stock, item.minimum_stock);
               return (
-                <div key={item.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
+                <div key={item.id} className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 rounded-lg border hover:bg-muted/50">
                   <div className="flex items-center space-x-4 flex-1 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"><Package className="h-5 w-5 text-primary" /></div>
                     <div className="min-w-0">
@@ -232,23 +237,23 @@ export function InventoryList() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4 md:space-x-6">
+                  <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-2">
                     <div className="text-center">
                       <p className="text-xs text-muted-foreground">Estoque</p>
-                      <div className="flex items-center justify-center space-x-1 font-medium">
+                      <div className="flex items-baseline justify-center space-x-1 font-medium">
                         <span>{item.current_stock}</span>
-                        <span className="text-muted-foreground">/ {item.minimum_stock}</span>
+                        <span className="text-xs text-muted-foreground">/ {item.minimum_stock}</span>
                       </div>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center hidden sm:block">
                       <p className="text-xs text-muted-foreground">Custo</p>
                       <p className="font-medium text-sm">{item.cost_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center hidden sm:block">
                       <p className="text-xs text-muted-foreground">Venda</p>
                       <p className="font-medium text-sm">{item.sale_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                     </div>
-                    <Badge variant={stockStatus.variant} className="hidden sm:inline-flex">{stockStatus.status}</Badge>
+                    <Badge variant={stockStatus.variant} className="hidden md:inline-flex">{stockStatus.status}</Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="sm"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">

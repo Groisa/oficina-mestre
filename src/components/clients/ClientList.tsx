@@ -29,7 +29,7 @@ function ClientForm({ onSave, onCancel, initialData = null }: { onSave: (formDat
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData, initialData?.id);
+    onSave(formData as any, initialData?.id);
   };
 
   return (
@@ -47,7 +47,7 @@ function ClientForm({ onSave, onCancel, initialData = null }: { onSave: (formDat
               <div className="space-y-2"><Label htmlFor="phone">Telefone</Label><Input id="phone" name="phone" value={formData.phone ?? ''} onChange={handleChange} /></div>
             </div>
             <div className="space-y-2"><Label htmlFor="status">Status</Label>
-              <Select name="status" onValueChange={(value) => setFormData(prev => ({...prev, status: value}))} value={formData.status}>
+              <Select name="status" onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))} value={formData.status}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="Ativo">Ativo</SelectItem><SelectItem value="Inativo">Inativo</SelectItem></SelectContent>
               </Select>
@@ -96,12 +96,12 @@ export function ClientList() {
   const handleDelete = async (clientId: number) => {
     if (window.confirm("Tem certeza que deseja excluir este cliente? A ação não pode ser desfeita.")) {
       const { data: vehicles, error: vehicleError } = await supabase.from('vehicles').select('id').eq('client_id', clientId);
-      
+
       if (vehicleError) {
         console.error("Erro ao verificar veículos:", vehicleError.message);
         return;
       }
-      
+
       if (vehicles && vehicles.length > 0) {
         alert("Não é possível excluir o cliente pois ele possui veículos cadastrados.");
         return;
@@ -127,7 +127,7 @@ export function ClientList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div><h1 className="text-3xl font-bold">Clientes</h1><p className="text-muted-foreground">Gerencie os clientes da oficina</p></div>
         <Button onClick={() => { setEditingClient(null); setView('form'); }}><Plus className="h-4 w-4 mr-2" />Novo Cliente</Button>
       </div>
@@ -142,19 +142,24 @@ export function ClientList() {
         <CardContent>
           <div className="space-y-4">
             {loading ? <p>Carregando...</p> : filteredClients.map((client) => (
-              <div key={client.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
+              <div key={client.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-lg border hover:bg-muted/50">
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-medium">{client.name.split(' ').map(n => n[0]).join('')}</div>
+                  <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-medium flex-shrink-0">
+                    {client.name.split(' ').map(n => n[0]).join('')}
+                  </div>
                   <div>
                     <h3 className="font-medium">{client.name}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center"><Mail className="h-3 w-3 mr-1" />{client.email || 'N/A'}</div>
-                      <div className="flex items-center"><Phone className="h-3 w-3 mr-1" />{client.phone || 'N/A'}</div>
+                    <div className="flex flex-col items-start sm:flex-row sm:items-center sm:space-x-4 text-sm text-muted-foreground mt-1">
+                      <div className="flex items-center min-w-0">
+                        <Mail className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                        <span className="break-all">{client.email || 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center"><Phone className="h-3 w-3 mr-1.5" />{client.phone || 'N/A'}</div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-right text-sm">
+                <div className="flex items-center space-x-4 self-end sm:self-center">
+                  <div className="text-right text-sm hidden md:block">
                     <div className="flex items-center space-x-1"><Car className="h-3 w-3" /><span>{client.vehicles[0]?.count ?? 0} veículo(s)</span></div>
                   </div>
                   <Badge variant={client.status === "Ativo" ? "default" : "outline"}>{client.status}</Badge>
@@ -174,4 +179,3 @@ export function ClientList() {
     </div>
   );
 }
-

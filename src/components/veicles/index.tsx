@@ -77,7 +77,7 @@ function VehicleForm({ onSave, onCancel, clients, initialData = null }) {
 }
 
 export function VehicleList() {
-  const [view, setView] = useState('list'); 
+  const [view, setView] = useState('list');
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicles, setVehicles] = useState([]);
@@ -117,12 +117,12 @@ export function VehicleList() {
     setView('list');
     setEditingVehicle(null);
   };
-  
+
   const handleDelete = async (vehicleId) => {
-    if(window.confirm("Tem certeza que deseja excluir este veículo?")) {
-        const { error } = await supabase.from('vehicles').delete().eq('id', vehicleId);
-        if (error) console.error("Erro ao deletar:", error.message);
-        else await fetchVehicles();
+    if (window.confirm("Tem certeza que deseja excluir este veículo?")) {
+      const { error } = await supabase.from('vehicles').delete().eq('id', vehicleId);
+      if (error) console.error("Erro ao deletar:", error.message);
+      else await fetchVehicles();
     }
   }
 
@@ -130,16 +130,16 @@ export function VehicleList() {
     v.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
     v.license_plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.clients.name.toLowerCase().includes(searchTerm.toLowerCase())
+    v.clients?.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   if (view === 'form') {
     return <VehicleForm onSave={handleSave} onCancel={() => { setView('list'); setEditingVehicle(null); }} clients={clients} initialData={editingVehicle} />;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Veículos</h1>
           <p className="text-muted-foreground">Gerencie os veículos da oficina</p>
@@ -152,7 +152,7 @@ export function VehicleList() {
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Buscar por marca, modelo, placa ou cliente..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10"/>
+        <Input placeholder="Buscar por marca, modelo, placa ou cliente..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
       </div>
 
       <Card>
@@ -162,19 +162,19 @@ export function VehicleList() {
         <CardContent>
           <div className="space-y-4">
             {loading ? <p>Carregando veículos...</p> : filteredVehicles.map((vehicle) => (
-              <div key={vehicle.id} className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center"><Car className="h-5 w-5"/></div>
-                  <div>
-                    <h3 className="font-medium text-foreground">{vehicle.make} {vehicle.model}</h3>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <div key={vehicle.id} className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border bg-card hover:bg-muted/50">
+                <div className="flex items-center space-x-4 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center flex-shrink-0"><Car className="h-5 w-5" /></div>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-foreground truncate">{vehicle.make} {vehicle.model}</h3>
+                    <div className="flex flex-col items-start gap-1 mt-2 text-sm text-muted-foreground md:flex-row md:items-center md:gap-4">
                       <div className="font-mono bg-muted px-2 py-0.5 rounded">{vehicle.license_plate}</div>
-                      <div className="flex items-center"><User className="h-3 w-3 mr-1" />{vehicle.clients?.name || 'Sem cliente'}</div>
-                      <div className="flex items-center"><Calendar className="h-3 w-3 mr-1" />{vehicle.year}</div>
+                      <div className="flex items-center truncate"><User className="h-3 w-3 mr-1.5 flex-shrink-0" />{vehicle.clients?.name || 'Sem cliente'}</div>
+                      <div className="flex items-center"><Calendar className="h-3 w-3 mr-1.5 flex-shrink-0" />{vehicle.year}</div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 self-end sm:self-center">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="ghost" size="sm"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -191,4 +191,3 @@ export function VehicleList() {
     </div>
   );
 }
-
