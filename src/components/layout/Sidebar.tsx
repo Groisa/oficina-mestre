@@ -9,8 +9,10 @@ import {
   Car, 
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut // Ícone de logout adicionado
 } from "lucide-react";
+import { useAuth } from "@/hooks/auth"; // Importando o hook de autenticação
 
 interface SidebarProps {
   activeTab: string;
@@ -52,6 +54,7 @@ const menuItems = [
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { signOut } = useAuth(); // Acedendo à função signOut do contexto
 
   return (
     <div className={cn(
@@ -119,9 +122,22 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               <p className="text-xs text-primary-foreground/80">Versão 1.0.0</p>
             </>
           ) : (
-            <div className="h-2 w-2 rounded-full bg-success mx-auto" />
+            <div className="h-2 w-2 rounded-full bg-green-400 mx-auto" />
           )}
         </div>
+        
+        {/* Botão de Logout Adicionado */}
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start text-primary-foreground hover:bg-primary-hover mt-2",
+            isCollapsed && "justify-center px-2"
+          )}
+          onClick={signOut}
+        >
+          <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
+          {!isCollapsed && "Sair"}
+        </Button>
       </div>
     </div>
   );

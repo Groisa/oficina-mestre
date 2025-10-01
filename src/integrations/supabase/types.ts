@@ -7,7 +7,6 @@ export type Json =
   | Json[]
 
 
-
 export interface Database {
   public: {
     Tables: {
@@ -16,18 +15,29 @@ export interface Database {
           created_at: string
           id: number
           name: string
+          user_id: string | null // Adicionado
         }
         Insert: {
           created_at?: string
           id?: number
           name: string
+          user_id?: string | null // Adicionado
         }
         Update: {
           created_at?: string
           id?: number
           name?: string
+          user_id?: string | null // Adicionado
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clients: {
         Row: {
@@ -37,6 +47,7 @@ export interface Database {
           name: string
           phone: string | null
           status: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -45,6 +56,7 @@ export interface Database {
           name: string
           phone?: string | null
           status?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -53,42 +65,57 @@ export interface Database {
           name?: string
           phone?: string | null
           status?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_items: {
         Row: {
           category_id: number | null
+          cost_price: number
           created_at: string
           current_stock: number
           id: number
           last_update: string
           minimum_stock: number
           name: string
+          sale_price: number
           supplier_id: number | null
-          unit_price: number
+          user_id: string | null // Adicionado
         }
         Insert: {
           category_id?: number | null
+          cost_price?: number
           created_at?: string
           current_stock?: number
           id?: number
           last_update?: string
           minimum_stock?: number
           name: string
+          sale_price?: number
           supplier_id?: number | null
-          unit_price?: number
+          user_id?: string | null // Adicionado
         }
         Update: {
           category_id?: number | null
+          cost_price?: number
           created_at?: string
           current_stock?: number
           id?: number
           last_update?: string
           minimum_stock?: number
           name?: string
+          sale_price?: number
           supplier_id?: number | null
-          unit_price?: number
+          user_id?: string | null // Adicionado
         }
         Relationships: [
           {
@@ -104,7 +131,14 @@ export interface Database {
             isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
-          }
+          },
+          {
+            foreignKeyName: "inventory_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       makes: {
@@ -125,6 +159,32 @@ export interface Database {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          id: string
+          full_name: string | null
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_orders: {
         Row: {
           client_id: number
@@ -135,6 +195,7 @@ export interface Database {
           status: string
           total_value: number
           vehicle_id: number
+          user_id: string | null
         }
         Insert: {
           client_id: number
@@ -145,6 +206,7 @@ export interface Database {
           status?: string
           total_value?: number
           vehicle_id: number
+          user_id?: string | null
         }
         Update: {
           client_id?: number
@@ -155,6 +217,7 @@ export interface Database {
           status?: string
           total_value?: number
           vehicle_id?: number
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -165,12 +228,19 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "service_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "service_orders_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       suppliers: {
@@ -178,18 +248,29 @@ export interface Database {
           created_at: string
           id: number
           name: string
+          user_id: string | null // Adicionado
         }
         Insert: {
           created_at?: string
           id?: number
           name: string
+          user_id?: string | null // Adicionado
         }
         Update: {
           created_at?: string
           id?: number
           name?: string
+          user_id?: string | null // Adicionado
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles: {
         Row: {
@@ -200,6 +281,7 @@ export interface Database {
           make: string
           model: string
           year: number | null
+          user_id: string | null
         }
         Insert: {
           client_id: number
@@ -209,6 +291,7 @@ export interface Database {
           make: string
           model: string
           year?: number | null
+          user_id?: string | null
         }
         Update: {
           client_id?: number
@@ -218,6 +301,7 @@ export interface Database {
           make?: string
           model?: string
           year?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -226,7 +310,14 @@ export interface Database {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
-          }
+          },
+          {
+            foreignKeyName: "vehicles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -234,10 +325,31 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_new_user: {
+        Args: {
+          email: string
+          password: string
+          full_name: string
+          role: string
+        }
+        Returns: Json
+      }
+      delete_user_by_id: {
+        Args: {
+          user_id_to_delete: string
+        }
+        Returns: undefined
+      }
+      decrement_stock: {
+        Args: {
+          item_id: number
+          decrement_quantity: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "mecanico"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -245,127 +357,3 @@ export interface Database {
   }
 }
 
-
-
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const

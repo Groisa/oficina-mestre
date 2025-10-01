@@ -16,13 +16,13 @@ type Category = Database['public']['Tables']['categories']['Row'];
 type Supplier = Database['public']['Tables']['suppliers']['Row'];
 type ItemWithRelations = Item & { categories: Category | null; suppliers: Supplier | null; };
 
-// Componente do Formulário com Cadastro Rápido
 function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, onAddNewCategory, onAddNewSupplier }: { onSave: Function, onCancel: Function, initialData?: Item | null, categories: Category[], suppliers: Supplier[], onAddNewCategory: Function, onAddNewSupplier: Function }) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     current_stock: initialData?.current_stock || 0,
     minimum_stock: initialData?.minimum_stock || 0,
-    unit_price: initialData?.unit_price || 0,
+    cost_price: initialData?.cost_price || 0,
+    sale_price: initialData?.sale_price || 0,
     category_id: initialData?.category_id || null,
     supplier_id: initialData?.supplier_id || null,
   });
@@ -96,10 +96,13 @@ function InventoryForm({ onSave, onCancel, initialData, categories, suppliers, o
                 </div>
               </div>
             </div>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2"><Label htmlFor="cost_price">Preço de Custo (R$)</Label><Input id="cost_price" name="cost_price" type="number" step="0.01" value={formData.cost_price} onChange={handleChange} /></div>
+              <div className="space-y-2"><Label htmlFor="sale_price">Preço de Venda (R$)</Label><Input id="sale_price" name="sale_price" type="number" step="0.01" value={formData.sale_price} onChange={handleChange} /></div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2"><Label htmlFor="current_stock">Estoque Atual</Label><Input id="current_stock" name="current_stock" type="number" value={formData.current_stock} onChange={handleChange} /></div>
               <div className="space-y-2"><Label htmlFor="minimum_stock">Estoque Mínimo</Label><Input id="minimum_stock" name="minimum_stock" type="number" value={formData.minimum_stock} onChange={handleChange} /></div>
-              <div className="space-y-2"><Label htmlFor="unit_price">Preço Unit. (R$)</Label><Input id="unit_price" name="unit_price" type="number" step="0.01" value={formData.unit_price} onChange={handleChange} /></div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-end"><Button type="submit">{isEditing ? "Salvar Alterações" : "Adicionar Item"}</Button></CardFooter>
@@ -165,7 +168,8 @@ export function InventoryList() {
   };
 
   const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.suppliers?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = item.name.toLowerCase().includes(searchLower) || item.suppliers?.name.toLowerCase().includes(searchLower);
     const matchesCategory = categoryFilter === "all" || item.category_id?.toString() === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -176,7 +180,7 @@ export function InventoryList() {
     return { status: "Normal", variant: "default" as const };
   };
 
-  const totalValue = inventory.reduce((acc, item) => acc + (item.current_stock * item.unit_price), 0);
+  const totalValue = inventory.reduce((acc, item) => acc + (item.current_stock * item.cost_price), 0);
   const lowStockCount = inventory.filter(item => item.current_stock < item.minimum_stock).length;
 
   if (view === 'form') {
@@ -206,9 +210,9 @@ export function InventoryList() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><Package className="h-5 w-5 text-primary" /><div><p className="text-sm text-muted-foreground">Total de Itens</p><p className="text-2xl font-bold">{inventory.length}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><Package className="h-5 w-5 text-primary" /><div><p className="text-sm text-muted-foreground">Itens Únicos</p><p className="text-2xl font-bold">{inventory.length}</p></div></div></CardContent></Card>
         <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><AlertTriangle className="h-5 w-5 text-destructive" /><div><p className="text-sm text-muted-foreground">Estoque Baixo</p><p className="text-2xl font-bold text-destructive">{lowStockCount}</p></div></div></CardContent></Card>
-        <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><TrendingUp className="h-5 w-5 text-emerald-500" /><div><p className="text-sm text-muted-foreground">Valor Total</p><p className="text-2xl font-bold">R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p></div></div></CardContent></Card>
+        <Card><CardContent className="p-4"><div className="flex items-center space-x-2"><TrendingUp className="h-5 w-5 text-emerald-500" /><div><p className="text-sm text-muted-foreground">Valor do Estoque (Custo)</p><p className="text-2xl font-bold">{totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p></div></div></CardContent></Card>
       </div>
 
       <Card>
@@ -219,28 +223,32 @@ export function InventoryList() {
               const stockStatus = getStockStatus(item.current_stock, item.minimum_stock);
               return (
                 <div key={item.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center"><Package className="h-5 w-5 text-primary" /></div>
-                    <div>
-                      <h3 className="font-medium">{item.name}</h3>
+                  <div className="flex items-center space-x-4 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"><Package className="h-5 w-5 text-primary" /></div>
+                    <div className="min-w-0">
+                      <h3 className="font-medium truncate" title={item.name}>{item.name}</h3>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <span>{item.categories?.name || 'N/A'}</span><span>•</span><span>{item.suppliers?.name || 'N/A'}</span>
+                        <span className="truncate">{item.categories?.name || 'N/A'}</span><span>•</span><span className="truncate">{item.suppliers?.name || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-4 md:space-x-6">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Estoque</p>
+                      <p className="text-xs text-muted-foreground">Estoque</p>
                       <div className="flex items-center justify-center space-x-1 font-medium">
                         <span>{item.current_stock}</span>
-                        {item.current_stock < item.minimum_stock && <TrendingDown className="h-3 w-3 text-destructive" />}
+                        <span className="text-muted-foreground">/ {item.minimum_stock}</span>
                       </div>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">Preço Unit.</p>
-                      <p className="font-medium">R$ {item.unit_price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <p className="text-xs text-muted-foreground">Custo</p>
+                      <p className="font-medium text-sm">{item.cost_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                     </div>
-                    <Badge variant={stockStatus.variant}>{stockStatus.status}</Badge>
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground">Venda</p>
+                      <p className="font-medium text-sm">{item.sale_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                    </div>
+                    <Badge variant={stockStatus.variant} className="hidden sm:inline-flex">{stockStatus.status}</Badge>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="sm"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
