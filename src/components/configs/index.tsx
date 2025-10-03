@@ -90,7 +90,7 @@ function UserManagement({ users, onUpdate, onDelete, onCreate }: { users: Profil
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [formData, setFormData] = useState({ email: '', password: '', full_name: '', role: 'mecanico' });
-  
+
   const handleOpenDialog = (user: Profile | null = null) => {
     setCurrentUser(user);
     if (user) {
@@ -107,18 +107,22 @@ function UserManagement({ users, onUpdate, onDelete, onCreate }: { users: Profil
       if (error) alert(`Erro ao atualizar usuário: ${error.message}`);
       else onUpdate();
     } else {
-       if (!formData.email || !formData.password || !formData.full_name) {
-         alert("Por favor, preencha todos os campos para criar um novo usuário.");
-         return;
-       }
-       const { error } = await supabase.rpc('create_new_user', {
-         email: formData.email,
-         password: formData.password,
-         full_name: formData.full_name,
-         role: formData.role
-       });
-       if (error) alert(`Erro ao criar usuário: ${error.message}`);
-       else onCreate();
+      if (!formData.email || !formData.password || !formData.full_name) {
+        alert("Por favor, preencha todos os campos para criar um novo usuário.");
+        return;
+      }
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.full_name,
+            role: formData.role
+          }
+        }
+      });
+      if (error) alert(`Erro ao criar usuário: ${error.message}`);
+      else onCreate();
     }
     setIsDialogOpen(false);
   };
@@ -126,7 +130,7 @@ function UserManagement({ users, onUpdate, onDelete, onCreate }: { users: Profil
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
-  
+
   const handleRoleChange = (value: string) => {
     setFormData(prev => ({ ...prev, role: value }));
   };
@@ -155,50 +159,50 @@ function UserManagement({ users, onUpdate, onDelete, onCreate }: { users: Profil
       </CardContent>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
-            <DialogHeader>
-                <DialogTitle>{currentUser ? 'Editar Usuário' : 'Novo Usuário'}</DialogTitle>
-                <DialogDescription>
-                    {currentUser ? 'Altere o nome e a permissão do usuário.' : 'Preencha os dados para criar um novo usuário.'}
-                </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
+          <DialogHeader>
+            <DialogTitle>{currentUser ? 'Editar Usuário' : 'Novo Usuário'}</DialogTitle>
+            <DialogDescription>
+              {currentUser ? 'Altere o nome e a permissão do usuário.' : 'Preencha os dados para criar um novo usuário.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              name="full_name"
+              placeholder="Nome Completo"
+              value={formData.full_name}
+              onChange={handleChange}
+            />
+            {!currentUser && (
+              <>
                 <Input
-                    name="full_name"
-                    placeholder="Nome Completo"
-                    value={formData.full_name}
-                    onChange={handleChange}
+                  name="email"
+                  type="email"
+                  placeholder="E-mail"
+                  value={formData.email}
+                  onChange={handleChange}
                 />
-                {!currentUser && (
-                    <>
-                        <Input
-                            name="email"
-                            type="email"
-                            placeholder="E-mail"
-                            value={formData.email}
-                            onChange={handleChange}
-                        />
-                        <Input
-                            name="password"
-                            type="password"
-                            placeholder="Senha"
-                            value={formData.password}
-                            onChange={handleChange}
-                        />
-                    </>
-                )}
-                <Select onValueChange={handleRoleChange} value={formData.role}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Selecione a permissão" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="admin">Administrador</SelectItem>
-                        <SelectItem value="mecanico">Mecânico</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-            <DialogFooter>
-                <Button onClick={handleSave}>Salvar</Button>
-            </DialogFooter>
+                <Input
+                  name="password"
+                  type="password"
+                  placeholder="Senha"
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </>
+            )}
+            <Select onValueChange={handleRoleChange} value={formData.role}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a permissão" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="mecanico">Mecânico</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleSave}>Salvar</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
@@ -206,7 +210,7 @@ function UserManagement({ users, onUpdate, onDelete, onCreate }: { users: Profil
 }
 
 export function SettingsPage() {
-  const { user, isAdmin, loading: authLoading } = useAuth(); 
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [users, setUsers] = useState<Profile[]>([]);
@@ -215,9 +219,9 @@ export function SettingsPage() {
   async function fetchData() {
     setLoading(true);
     const [categoriesRes, suppliersRes, usersRes] = await Promise.all([
-        supabase.from('categories').select('*').order('name'),
-        supabase.from('suppliers').select('*').order('name'),
-        isAdmin ? supabase.from('profiles').select('*').order('full_name') : Promise.resolve({ data: [], error: null })
+      supabase.from('categories').select('*').order('name'),
+      supabase.from('suppliers').select('*').order('name'),
+      isAdmin ? supabase.from('profiles').select('*').order('full_name') : Promise.resolve({ data: [], error: null })
     ]);
 
     if (categoriesRes.error || suppliersRes.error || usersRes.error) {
@@ -226,7 +230,7 @@ export function SettingsPage() {
       setCategories(categoriesRes.data || []);
       setSuppliers(suppliersRes.data || []);
       if (isAdmin) {
-          setUsers(usersRes.data || []);
+        setUsers(usersRes.data || []);
       }
     }
     setLoading(false);
@@ -263,14 +267,14 @@ export function SettingsPage() {
 
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm("Tem certeza que deseja excluir este usuário? Esta ação é irreversível.")) {
-        const { error } = await supabase.rpc('delete_user_by_id', {
-            user_id_to_delete: userId
-        });
-        if (error) {
-            alert(`Erro ao excluir usuário: ${error.message}`);
-        } else {
-            await fetchData();
-        }
+      const { error } = await supabase.rpc('delete_user_by_id', {
+        user_id_to_delete: userId
+      });
+      if (error) {
+        alert(`Erro ao excluir usuário: ${error.message}`);
+      } else {
+        await fetchData();
+      }
     }
   };
 
@@ -292,31 +296,31 @@ export function SettingsPage() {
         </TabsList>
         {isAdmin && (
           <TabsContent value="users" className="mt-4">
-              <UserManagement
-                  users={users}
-                  onUpdate={fetchData}
-                  onDelete={handleDeleteUser}
-                  onCreate={fetchData}
-              />
+            <UserManagement
+              users={users}
+              onUpdate={fetchData}
+              onDelete={handleDeleteUser}
+              onCreate={fetchData}
+            />
           </TabsContent>
         )}
         <TabsContent value="categories" className="mt-4">
-          <ManagementList 
-            title="Categorias" 
-            items={categories} 
-            onSave={handleSaveItem} 
-            onDelete={handleDeleteItem} 
+          <ManagementList
+            title="Categorias"
+            items={categories}
+            onSave={handleSaveItem}
+            onDelete={handleDeleteItem}
             tableName="categories"
             userId={user?.id}
             isAdmin={isAdmin}
           />
         </TabsContent>
         <TabsContent value="suppliers" className="mt-4">
-          <ManagementList 
-            title="Fornecedores" 
-            items={suppliers} 
-            onSave={handleSaveItem} 
-            onDelete={handleDeleteItem} 
+          <ManagementList
+            title="Fornecedores"
+            items={suppliers}
+            onSave={handleSaveItem}
+            onDelete={handleDeleteItem}
             tableName="suppliers"
             userId={user?.id}
             isAdmin={isAdmin}
